@@ -1,0 +1,10 @@
+<Solution>
+  <Project Path="Market.API.Application/Market.API.Application.csproj" />
+  <Project Path="Market.API.Domain/Market.API.Domain.csproj" />
+  <Project Path="Market.API.Infrastructure/Market.API.Infrastructure.csproj" />
+  <Project Path="Market.API.Persistence/Market.API.Persistence.csproj" />
+  <Project Path="Market.API/Market.API.csproj" />
+  <Project Path="Market.Client.API/Market.Client.API.csproj" />
+  <Project Path="Market.Client/Market.Client.csproj" />
+  <Project Path="Market.Shared.Contracts/Market.Shared.Contracts.csproj" />
+</Solution>

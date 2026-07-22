@@ -1,0 +1,49 @@
+﻿@model Market.Client.Models.Auth.LoginViewModel
+@{
+    ViewData["Title"] = "Login";
+    Layout = "_Layout";
+}
+
+<div class="d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="card shadow-sm" style="width: 400px;">
+        <div class="card-body p-4">
+            <h3 class="card-title text-center mb-4">Sign In</h3>
+
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger d-none-empty"></div>
+
+            <form id="frmLogin" asp-action="Login" asp-controller="Account" method="post">
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-control" placeholder="you@example.com" />
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Password" class="form-label"></label>
+                    <input asp-for="Password" class="form-control" placeholder="••••••••" />
+                    <span asp-validation-for="Password" class="text-danger small"></span>
+                </div>
+
+                <button id="btnLogin" type="submit" class="btn btn-primary w-100">Sign In</button>
+            </form>
+
+            <p class="text-center mt-3 mb-0">
+                Don't have an account? <a asp-action="Register">Register</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        $('#frmLogin').on('submit', function () {
+            if (!$(this).valid()) return;
+            var $btn = $('#btnLogin');
+            $btn.prop('disabled', true)
+                .html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Signing in\u2026');
+        });
+    </script>
+}
