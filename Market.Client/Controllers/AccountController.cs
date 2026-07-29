@@ -29,7 +29,7 @@ namespace Market.Client.Controllers
         {
             if (!ModelState.IsValid) return View(model);
 
-            var (succeeded, result, error) = await _authApiClient.LoginAsync(new LoginRequest(model.Email, model.Password));
+            var (succeeded, result, error) = await _authApiClient.LoginAsync(new LoginRequest(model.EmailOrUsername, model.Password));
 
             if (!succeeded || result is null || string.IsNullOrEmpty(result.Token))
             {
@@ -63,7 +63,7 @@ namespace Market.Client.Controllers
             if (!ModelState.IsValid) return View(model);
 
             var (succeeded, userId, error) = await _authApiClient.RegisterAsync(
-                new RegisterRequest(model.FullName, model.Email, model.Password, null));
+                new RegisterRequest(model.FullName, model.Username, model.Email, model.Password, null));
 
             if (!succeeded)
             {

@@ -4,5 +4,5 @@ using System.Text;
 
 namespace Market.Shared.Contracts.Auth
 {
-    public record RegisterRequest(string FullName, string Email, string Password, Guid? StoreId);
+    public record RegisterRequest(string FullName, string Username, string Email, string Password, Guid? StoreId);
 }

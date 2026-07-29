@@ -34,21 +34,21 @@ public class AuthApiClient : IAuthApiClient
 
             if (payload is null)
             {
-                _logger.LogWarning("Login returned an empty response body for {Email}", request.Email);
+                _logger.LogWarning("Login returned an empty response body for {Identifier}", request.EmailOrUsername);
                 return (false, null, "Login failed.");
             }
 
             if (!payload.Success)
             {
                 var error = payload.Errors.FirstOrDefault() ?? payload.Message;
-                _logger.LogWarning("Login failed for {Email}. Message: {Message}", request.Email, error);
+                _logger.LogWarning("Login failed for {Identifier}. Message: {Message}", request.EmailOrUsername, error);
                 return (false, null, string.IsNullOrWhiteSpace(error) ? "Invalid email or password." : error);
             }
 
             var result = payload.Data;
             if (result is null || string.IsNullOrWhiteSpace(result.Token))
             {
-                _logger.LogWarning("Login returned an invalid auth payload for {Email}. Message: {Message}", request.Email, payload.Message);
+                _logger.LogWarning("Login returned an invalid auth payload for {Identifier}. Message: {Message}", request.EmailOrUsername, payload.Message);
                 return (false, null, "Login failed.");
             }
 
@@ -57,17 +57,17 @@ public class AuthApiClient : IAuthApiClient
         }
         catch (HttpRequestException ex)
         {
-            _logger.LogError(ex, "Connection to Market.API failed during login for {Email}", request.Email);
+            _logger.LogError(ex, "Connection to Market.API failed during login for {Identifier}", request.EmailOrUsername);
             return (false, null, "Unable to reach the server. Please try again later.");
         }
         catch (TaskCanceledException ex)
         {
-            _logger.LogError(ex, "Login request to Market.API timed out for {Email}", request.Email);
+            _logger.LogError(ex, "Login request to Market.API timed out for {Identifier}", request.EmailOrUsername);
             return (false, null, "The server took too long to respond.");
         }
         catch (JsonException ex)
         {
-            _logger.LogError(ex, "Login response from Market.API could not be parsed for {Email}", request.Email);
+            _logger.LogError(ex, "Login response from Market.API could not be parsed for {Identifier}", request.EmailOrUsername);
             return (false, null, "Login failed.");
         }
     }

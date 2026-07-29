@@ -8,6 +8,9 @@ namespace Market.Client.Models.Auth
         [Required, StringLength(200)]
         public string FullName { get; set; } = default!;
 
+        [Required, StringLength(50, MinimumLength = 3)]
+        public string Username { get; set; } = default!;
+
         [Required, EmailAddress]
         public string Email { get; set; } = default!;
 

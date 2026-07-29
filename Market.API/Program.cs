@@ -32,7 +32,13 @@ builder.Services.AddEndpointsApiExplorer();
 
 var app = builder.Build();
 
-// Seed roles
+//// Seed roles
+//using (var scope = app.Services.CreateScope())
+//{
+//    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
+//    await SeedRolesAsync(roleManager);
+//}
+// Seed roles (after migrations are applied)
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();

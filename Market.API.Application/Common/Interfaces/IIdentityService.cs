@@ -7,9 +7,9 @@ namespace Market.API.Application.Common.Interfaces
     public interface IIdentityService
     {
         Task<(bool Succeeded, string? UserId, IEnumerable<string> Errors)> CreateUserAsync(
-            string fullName, string email, string password, Guid? storeId);
+            string fullName, string username, string email, string password, Guid? storeId);
 
-        Task<(bool Succeeded, AuthResult? Result)> LoginAsync(string email, string password);
+        Task<(bool Succeeded, AuthResult? Result)> LoginAsync(string emailOrUsername, string password);
     }
     public class AuthResult
     {

@@ -8,13 +8,14 @@ using System.Text;
 
 namespace Market.API.Application.Auth.Commands.Register
 {
-    public record RegisterCommand(string FullName, string Email, string Password, Guid? StoreId) : IRequest<Guid>;
+    public record RegisterCommand(string FullName, string Username, string Email, string Password, Guid? StoreId) : IRequest<Guid>;
 
     public class RegisterCommandValidator : AbstractValidator<RegisterCommand>
     {
         public RegisterCommandValidator()
         {
             RuleFor(x => x.Email).NotEmpty().EmailAddress();
+            RuleFor(x => x.Username).NotEmpty().MinimumLength(3).MaximumLength(50);
             RuleFor(x => x.Password).NotEmpty().MinimumLength(8);
             RuleFor(x => x.FullName).NotEmpty().MaximumLength(200);
         }
@@ -28,7 +29,7 @@ namespace Market.API.Application.Auth.Commands.Register
         public async Task<Guid> Handle(RegisterCommand request, CancellationToken ct)
         {
             var (succeeded, userId, errors) = await _identityService.CreateUserAsync(
-                request.FullName, request.Email, request.Password, request.StoreId);
+                request.FullName, request.Username, request.Email, request.Password, request.StoreId);
 
             if (!succeeded)
                 throw new FluentValidation.ValidationException(string.Join("; ", errors));

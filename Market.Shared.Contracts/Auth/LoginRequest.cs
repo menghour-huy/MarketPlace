@@ -4,5 +4,5 @@ using System.Text;
 
 namespace Market.Shared.Contracts.Auth
 {
-    public record LoginRequest(string Email, string Password);
+    public record LoginRequest(string EmailOrUsername, string Password);
 }

@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Market.API.Application.Auth.Commands.Login
 {
-    public record LoginCommand(string Email, string Password) : IRequest<AuthResult?>;
+    public record LoginCommand(string EmailOrUsername, string Password) : IRequest<AuthResult?>;
 
     public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResult?>
     {
@@ -15,7 +15,7 @@ namespace Market.API.Application.Auth.Commands.Login
 
         public async Task<AuthResult?> Handle(LoginCommand request, CancellationToken ct)
         {
-            var (succeeded, result) = await _identityService.LoginAsync(request.Email, request.Password);
+            var (succeeded, result) = await _identityService.LoginAsync(request.EmailOrUsername, request.Password);
 
             if (!succeeded || result is null)
                 return null;
