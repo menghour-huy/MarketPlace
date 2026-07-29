@@ -1,6 +1,8 @@
 ﻿using Market.Client.API.Auth;
 using Market.Client.API.Handlers;
 using Market.Client.API.Interface.Auth;
+using Market.Client.API.Interface.User;
+using Market.Client.API.Service.User;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Polly;
@@ -29,6 +31,15 @@ public static class DependencyInjection
 
         services.AddTransient<AuthHeaderHandler>();
         services.AddHttpClient<IAuthApiClient, AuthApiClient>(c =>
+        {
+            c.BaseAddress = new Uri(baseUrl);
+            c.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
+        })
+            .AddHttpMessageHandler<AuthHeaderHandler>()
+            .AddPolicyHandler(GetRetryPolicy())
+            .AddPolicyHandler(GetCircuitBreakerPolicy());
+
+        services.AddHttpClient<IUserApiClient, UserApiClient>(c =>
         {
             c.BaseAddress = new Uri(baseUrl);
             c.Timeout = TimeSpan.FromSeconds(timeoutSeconds);

@@ -1,0 +1,242 @@
+@model UserSettingsViewModel
+@using Market.Client.Models.User
+
+@{
+    ViewData["Title"] = "User Settings";
+}
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fa fa-cog me-2"></i>Profile Settings</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" id="settingsForm">
+                        @if (ViewData.ModelState?.IsValid == false)
+                        {
+                            <script>$(function () { AppJs.toast.error('Please correct the errors below.'); });</script>
+                        }
+                        <!-- Profile Image Section -->
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <h5 class="mb-3">Profile Picture</h5>
+                                <div class="row">
+                                    <div class="col-md-4 text-center">
+                                        <div class="profile-image-container mb-3">
+                                            @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                                            {
+                                                <img id="previewImage" 
+                                                     src="@Model.ImageUrl" 
+                                                     alt="Profile" 
+                                                     class="img-fluid rounded"
+                                                     style="max-width: 200px; max-height: 200px; object-fit: cover;" />
+                                            }
+                                            else
+                                            {
+                                                <div id="previewImagePlaceholder" 
+                                                     class="bg-light rounded d-flex align-items-center justify-content-center"
+                                                     style="width: 200px; height: 200px; margin: 0 auto;">
+                                                    <div class="text-center">
+                                                        <i class="fa fa-camera fa-3x text-muted mb-2"></i>
+                                                        <p class="text-muted">No image selected</p>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="mb-3">
+                                            <label for="ImageFile" class="form-label">Upload Image</label>
+                                            <input type="file" 
+                                                   class="form-control" 
+                                                   id="ImageFile" 
+                                                   name="ImageFile" 
+                                                   accept="image/*"
+                                                   onchange="previewImage(event)">
+                                            <small class="form-text text-muted">
+                                                Supported formats: JPG, PNG, GIF, WebP. Max size: 5MB.
+                                            </small>
+                                            @if (ViewData.ModelState["ImageFile"]?.Errors.Any() ?? false)
+                                            {
+                                                <div class="invalid-feedback d-block">
+                                                    @(ViewData.ModelState["ImageFile"]?.Errors[0].ErrorMessage ?? "Invalid file")
+                                                </div>
+                                            }
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-secondary" onclick="clearImage()">
+                                            <i class="fa fa-trash me-1"></i>Clear Image
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr />
+
+                        <!-- Personal Information Section -->
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <h5 class="mb-3">Personal Information</h5>
+                            </div>
+                        </div>
+
+                        <!-- Full Name -->
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="FullName" class="form-label">Full Name</label>
+                                <input type="text" 
+                                       class="form-control @(ViewData.ModelState["FullName"]?.Errors.Any() ?? false ? "is-invalid" : "")" 
+                                       id="FullName" 
+                                       name="FullName" 
+                                       value="@Model.FullName"
+                                       required>
+                                @if (ViewData.ModelState["FullName"]?.Errors.Any() ?? false)
+                                {
+                                    <div class="invalid-feedback d-block">
+                                        @(ViewData.ModelState["FullName"]?.Errors[0].ErrorMessage ?? "Invalid name")
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Primary Email -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="PrimaryEmail" class="form-label">Primary Email</label>
+                                <input type="email" 
+                                       class="form-control @(ViewData.ModelState["PrimaryEmail"]?.Errors.Any() ?? false ? "is-invalid" : "")" 
+                                       id="PrimaryEmail" 
+                                       name="PrimaryEmail" 
+                                       value="@Model.PrimaryEmail"
+                                       required>
+                                @if (ViewData.ModelState["PrimaryEmail"]?.Errors.Any() ?? false)
+                                {
+                                    <div class="invalid-feedback d-block">
+                                        @(ViewData.ModelState["PrimaryEmail"]?.Errors[0].ErrorMessage ?? "Invalid email")
+                                    </div>
+                                }
+                            </div>
+
+                            <!-- Secondary Email -->
+                            <div class="col-md-6">
+                                <label for="SecondaryEmail" class="form-label">Secondary Email (Optional)</label>
+                                <input type="email" 
+                                       class="form-control @(ViewData.ModelState["SecondaryEmail"]?.Errors.Any() ?? false ? "is-invalid" : "")" 
+                                       id="SecondaryEmail" 
+                                       name="SecondaryEmail" 
+                                       value="@Model.SecondaryEmail">
+                                @if (ViewData.ModelState["SecondaryEmail"]?.Errors.Any() ?? false)
+                                {
+                                    <div class="invalid-feedback d-block">
+                                        @(ViewData.ModelState["SecondaryEmail"]?.Errors[0].ErrorMessage ?? "Invalid email")
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Account Information -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Account Created</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       value="@Model.CreatedAt.ToString("MMMM dd, yyyy")"
+                                       disabled>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Last Updated</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       value="@(Model.UpdatedAt?.ToString("MMMM dd, yyyy") ?? "Never")"
+                                       disabled>
+                            </div>
+                        </div>
+
+                        <hr />
+
+                        <!-- Action Buttons -->
+                        <div class="row">
+                            <div class="col-md-12">
+                                <button type="submit" class="btn btn-primary me-2">
+                                    <i class="fa fa-save me-1"></i>Save Changes
+                                </button>
+                                <a href="@Url.Action("Index", "Home")" class="btn btn-secondary">
+                                    <i class="fa fa-times me-1"></i>Cancel
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function previewImage(event) {
+            const file = event.target.files[0];
+
+            if (!file) return;
+
+            // Validate file size (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                AppJs.toast.error('File size must be less than 5MB.');
+                event.target.value = '';
+                return;
+            }
+
+            // Validate file type 
+            const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            if (!validTypes.includes(file.type)) {
+                AppJs.toast.error('Please upload a valid image file (JPG, PNG, GIF, WebP).');
+                event.target.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const previewId = document.getElementById('previewImage');
+                const placeholderId = document.getElementById('previewImagePlaceholder');
+
+                if (previewId && e.target) {
+                    previewId.src = e.target.result;
+                    previewId.style.display = 'block';
+                } else if (e.target) {
+                    // Create img element if it doesn't exist
+                    const img = document.createElement('img');
+                    img.id = 'previewImage';
+                    img.src = e.target.result;
+                    img.className = 'img-fluid rounded';
+                    img.style.cssText = 'max-width: 200px; max-height: 200px; object-fit: cover;';
+
+                    const container = document.querySelector('.profile-image-container');
+                    if (container) {
+                        container.innerHTML = '';
+                        container.appendChild(img);
+                    }
+                }
+
+                if (placeholderId) {
+                    placeholderId.style.display = 'none';
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearImage() {
+            document.getElementById('ImageFile').value = '';
+            const previewId = document.getElementById('previewImage');
+            const placeholderId = document.getElementById('previewImagePlaceholder');
+
+            if (previewId) {
+                previewId.style.display = 'none';
+            }
+            if (placeholderId) {
+                placeholderId.style.display = 'flex';
+            }
+        }
+    </script>
+}

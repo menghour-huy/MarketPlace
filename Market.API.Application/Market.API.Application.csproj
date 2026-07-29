@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Market.API.Domain\Market.API.Domain.csproj" />
+    <ProjectReference Include="..\Market.Shared.Contracts\Market.Shared.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

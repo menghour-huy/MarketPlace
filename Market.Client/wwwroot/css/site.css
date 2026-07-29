@@ -91,3 +91,125 @@ html {
 [data-bs-theme="dark"] .app-footer {
   border-color: var(--bs-border-color) !important;
 }
+
+/* ============================================================
+   User Dropdown Menu Styling
+   ============================================================ */
+.user-avatar-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.user-avatar {
+  border: 2px solid var(--bs-primary);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.user-avatar:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25);
+}
+
+.user-avatar-icon {
+  border: 2px solid var(--bs-primary);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.user-avatar-icon:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25);
+}
+
+.dropdown-toggle::after {
+  display: none;
+}
+
+.navbar-link.dropdown-toggle:hover {
+  opacity: 0.8;
+}
+
+.dropdown-menu {
+  background-color: var(--bs-body-bg);
+  border: 1px solid var(--bs-border-color);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+[data-bs-theme="dark"] .dropdown-menu {
+  background-color: var(--bs-dark);
+  border-color: var(--bs-border-color);
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  color: var(--bs-body-color);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+  background-color: var(--bs-light);
+  color: var(--bs-body-color);
+}
+
+[data-bs-theme="dark"] .dropdown-item {
+  color: var(--bs-body-color);
+}
+
+[data-bs-theme="dark"] .dropdown-item:hover,
+[data-bs-theme="dark"] .dropdown-item:focus {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--bs-body-color);
+}
+
+.dropdown-item i {
+  min-width: 20px;
+  text-align: center;
+}
+
+.dropdown-divider {
+  margin: 0.25rem 0;
+}
+
+/* ============================================================
+   Profile Image Container Styling
+   ============================================================ */
+.profile-image-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bs-light);
+  border-radius: 0.375rem;
+}
+
+[data-bs-theme="dark"] .profile-image-container {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* ============================================================
+   Animation for toast notifications
+   ============================================================ */
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+}

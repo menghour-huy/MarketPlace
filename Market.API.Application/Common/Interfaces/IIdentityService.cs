@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Market.Shared.Contracts.User;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -10,6 +11,10 @@ namespace Market.API.Application.Common.Interfaces
             string fullName, string username, string email, string password, Guid? storeId);
 
         Task<(bool Succeeded, AuthResult? Result)> LoginAsync(string emailOrUsername, string password);
+
+        Task<(bool Succeeded, UserProfileResponse? Profile, string? Error)> GetUserProfileAsync(Guid userId);
+
+        Task<(bool Succeeded, UserProfileResponse? Profile, string? Error)> UpdateUserProfileAsync(Guid userId, UpdateUserProfileRequest request);
     }
     public class AuthResult
     {

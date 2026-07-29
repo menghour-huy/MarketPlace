@@ -1,4 +1,5 @@
 ﻿using Market.API.Application.Common.Interfaces;
+using Market.Shared.Contracts.User;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -185,6 +186,134 @@ namespace Market.API.Persistence.Identity
             return candidate;
         }
 
+        public async Task<(bool Succeeded, UserProfileResponse? Profile, string? Error)> GetUserProfileAsync(Guid userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user is null)
+                return (false, null, "User not found.");
+
+            return (true, MapToProfileResponse(user), null);
+        }
+
+        public async Task<(bool Succeeded, UserProfileResponse? Profile, string? Error)> UpdateUserProfileAsync(Guid userId, UpdateUserProfileRequest request)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user is null)
+                return (false, null, "User not found.");
+
+            // Check if the new primary email is already taken by a different user
+            if (!string.Equals(user.Email, request.PrimaryEmail, StringComparison.OrdinalIgnoreCase))
+            {
+                var existing = await _userManager.FindByEmailAsync(request.PrimaryEmail);
+                if (existing != null && existing.Id != userId)
+                    return (false, null, "This email address is already in use.");
+            }
+
+            user.FullName = request.FullName;
+            user.Email = request.PrimaryEmail;
+            user.UserName = request.PrimaryEmail;
+            user.SecondaryEmail = request.SecondaryEmail;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            if (!string.IsNullOrWhiteSpace(request.ImageBase64))
+            {
+                var (saved, imagePath, imageError) = await SaveUserImageAsync(request.ImageBase64, user.ImageUrl);
+                if (!saved || string.IsNullOrWhiteSpace(imagePath))
+                {
+                    return (false, null, imageError ?? "Failed to save profile image.");
+                }
+
+                user.ImageUrl = imagePath;
+            }
+
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join("; ", result.Errors.Select(e => e.Description));
+                return (false, null, errors);
+            }
+
+            return (true, MapToProfileResponse(user), null);
+        }
+
+        private static UserProfileResponse MapToProfileResponse(ApplicationUser user) =>
+            new(
+                user.Id,
+                user.FullName,
+                user.Email!,
+                user.SecondaryEmail,
+                user.ImageUrl,
+                user.CreatedAt,
+                user.UpdatedAt
+            );
+
+        private static (bool Success, byte[] Bytes, string Extension) TryDecodeImage(string imageBase64)
+        {
+            if (string.IsNullOrWhiteSpace(imageBase64))
+            {
+                return (false, Array.Empty<byte>(), string.Empty);
+            }
+
+            var payload = imageBase64.Trim();
+            var extension = ".jpg";
+
+            if (payload.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+            {
+                var separator = payload.IndexOf(',');
+                if (separator <= 0)
+                {
+                    return (false, Array.Empty<byte>(), string.Empty);
+                }
+
+                var metadata = payload[..separator];
+                payload = payload[(separator + 1)..];
+
+                if (metadata.Contains("image/png", StringComparison.OrdinalIgnoreCase)) extension = ".png";
+                else if (metadata.Contains("image/gif", StringComparison.OrdinalIgnoreCase)) extension = ".gif";
+                else if (metadata.Contains("image/webp", StringComparison.OrdinalIgnoreCase)) extension = ".webp";
+                else extension = ".jpg";
+            }
+
+            try
+            {
+                var bytes = Convert.FromBase64String(payload);
+                return (bytes.Length > 0, bytes, extension);
+            }
+            catch (FormatException)
+            {
+                return (false, Array.Empty<byte>(), string.Empty);
+            }
+        }
+
+        private async Task<(bool Success, string? ImagePath, string? Error)> SaveUserImageAsync(string imageBase64, string? existingImagePath)
+        {
+            var (decoded, bytes, extension) = TryDecodeImage(imageBase64);
+            if (!decoded)
+            {
+                return (false, null, "Invalid image content.");
+            }
+
+            var uploadsDirectory = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "users");
+            Directory.CreateDirectory(uploadsDirectory);
+
+            var fileName = $"{Guid.NewGuid():N}{extension}";
+            var fullPath = Path.Combine(uploadsDirectory, fileName);
+            await File.WriteAllBytesAsync(fullPath, bytes);
+
+            if (!string.IsNullOrWhiteSpace(existingImagePath) &&
+                existingImagePath.StartsWith("/uploads/users/", StringComparison.OrdinalIgnoreCase))
+            {
+                var existingFileName = Path.GetFileName(existingImagePath);
+                var existingPath = Path.Combine(uploadsDirectory, existingFileName);
+                if (File.Exists(existingPath))
+                {
+                    File.Delete(existingPath);
+                }
+            }
+
+            return (true, $"/uploads/users/{fileName}", null);
+        }
+
         private (string Token, DateTime ExpiresAt) GenerateJwtToken(ApplicationUser user, IList<string> roles)
         {
             var jwtSettings = _config.GetSection("Jwt");
@@ -192,12 +321,12 @@ namespace Market.API.Persistence.Identity
             var expiresAt = DateTime.UtcNow.AddMinutes(expiryMinutes);
 
             var claims = new List<Claim>
-        {
-            new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new(JwtRegisteredClaimNames.Email, user.Email!),
-            new(ClaimTypes.Name, user.FullName),
-            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-        };
+            {
+                new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new(JwtRegisteredClaimNames.Email, user.Email!),
+                new(ClaimTypes.Name, user.FullName),
+                new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
 
             if (user.StoreId.HasValue)
                 claims.Add(new Claim("storeId", user.StoreId.Value.ToString()));
