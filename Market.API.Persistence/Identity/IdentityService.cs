@@ -101,7 +101,8 @@ namespace Market.API.Persistence.Identity
             rolesStopwatch.Stop();
 
             var tokenStopwatch = Stopwatch.StartNew();
-            var token = GenerateJwtToken(user, roles);
+            var accessToken = GenerateAccessToken(user, roles);
+            var refreshToken = GenerateRefreshToken(user);
             tokenStopwatch.Stop();
 
             totalStopwatch.Stop();
@@ -128,14 +129,39 @@ namespace Market.API.Persistence.Identity
                     totalStopwatch.ElapsedMilliseconds);
             }
 
-            return (true, new AuthResult
+            return (true, BuildAuthResult(user, roles, accessToken, refreshToken));
+        }
+
+        public async Task<(bool Succeeded, AuthResult? Result)> RefreshTokenAsync(string refreshToken)
+        {
+            if (string.IsNullOrWhiteSpace(refreshToken))
             {
-                Token = token.Token,
-                ExpiresAt = token.ExpiresAt,
-                Email = user.Email!,
-                FullName = user.FullName,
-                Roles = roles
-            });
+                return (false, null);
+            }
+
+            var principal = ValidateRefreshToken(refreshToken);
+            if (principal is null)
+            {
+                return (false, null);
+            }
+
+            var userId = principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
+            if (!Guid.TryParse(userId, out var parsedUserId))
+            {
+                return (false, null);
+            }
+
+            var user = await _userManager.FindByIdAsync(parsedUserId.ToString());
+            if (user is null || !user.IsActive)
+            {
+                return (false, null);
+            }
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var newAccessToken = GenerateAccessToken(user, roles);
+            var newRefreshToken = GenerateRefreshToken(user);
+
+            return (true, BuildAuthResult(user, roles, newAccessToken, newRefreshToken));
         }
 
         private async Task<ApplicationUser?> ResolveUserByEmailOrUsernameAsync(string emailOrUsername)
@@ -314,7 +340,25 @@ namespace Market.API.Persistence.Identity
             return (true, $"/uploads/users/{fileName}", null);
         }
 
-        private (string Token, DateTime ExpiresAt) GenerateJwtToken(ApplicationUser user, IList<string> roles)
+        private AuthResult BuildAuthResult(
+            ApplicationUser user,
+            IList<string> roles,
+            (string Token, DateTime ExpiresAt) accessToken,
+            (string Token, DateTime ExpiresAt) refreshToken)
+        {
+            return new AuthResult
+            {
+                Token = accessToken.Token,
+                ExpiresAt = accessToken.ExpiresAt,
+                RefreshToken = refreshToken.Token,
+                RefreshTokenExpiresAt = refreshToken.ExpiresAt,
+                Email = user.Email!,
+                FullName = user.FullName,
+                Roles = roles
+            };
+        }
+
+        private (string Token, DateTime ExpiresAt) GenerateAccessToken(ApplicationUser user, IList<string> roles)
         {
             var jwtSettings = _config.GetSection("Jwt");
             var expiryMinutes = int.Parse(jwtSettings["ExpiryMinutes"] ?? "60");
@@ -344,6 +388,66 @@ namespace Market.API.Persistence.Identity
                 signingCredentials: creds);
 
             return (new JwtSecurityTokenHandler().WriteToken(token), expiresAt);
+        }
+
+        private (string Token, DateTime ExpiresAt) GenerateRefreshToken(ApplicationUser user)
+        {
+            var jwtSettings = _config.GetSection("Jwt");
+            var refreshExpiryDays = int.Parse(jwtSettings["RefreshExpiryDays"] ?? "7");
+            var expiresAt = DateTime.UtcNow.AddDays(refreshExpiryDays);
+
+            var claims = new List<Claim>
+            {
+                new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new("token_type", "refresh"),
+                new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]!));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
+                issuer: jwtSettings["Issuer"],
+                audience: jwtSettings["Audience"],
+                claims: claims,
+                expires: expiresAt,
+                signingCredentials: creds);
+
+            return (new JwtSecurityTokenHandler().WriteToken(token), expiresAt);
+        }
+
+        private ClaimsPrincipal? ValidateRefreshToken(string refreshToken)
+        {
+            var jwtSettings = _config.GetSection("Jwt");
+            var validationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ClockSkew = TimeSpan.Zero,
+                ValidIssuer = jwtSettings["Issuer"],
+                ValidAudience = jwtSettings["Audience"],
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]!))
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            try
+            {
+                var principal = tokenHandler.ValidateToken(refreshToken, validationParameters, out var validatedToken);
+                if (validatedToken is not JwtSecurityToken jwtToken ||
+                    !jwtToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.OrdinalIgnoreCase))
+                {
+                    return null;
+                }
+
+                var tokenType = principal.FindFirstValue("token_type");
+                return string.Equals(tokenType, "refresh", StringComparison.Ordinal) ? principal : null;
+            }
+            catch
+            {
+                return null;
+            }
         }
     }
 }

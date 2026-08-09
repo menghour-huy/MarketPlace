@@ -1,6 +1,7 @@
 using Market.Client.API.Interface.User;
 using Market.Shared.Contracts.User;
 using Microsoft.Extensions.Logging;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 
 namespace Market.Client.API.Service.User
@@ -21,7 +22,6 @@ namespace Market.Client.API.Service.User
             try
             {
                 var response = await _http.GetAsync($"api/user/{userId}");
-
                 if (!response.IsSuccessStatusCode)
                 {
                     var body = await response.Content.ReadAsStringAsync();

@@ -4,5 +4,12 @@ using System.Text;
 
 namespace Market.Shared.Contracts.Auth
 {
-    public record AuthResponse(string Token, DateTime ExpiresAt, string Email, string FullName, IList<string> Roles);
+    public record AuthResponse(
+        string Token,
+        DateTime ExpiresAt,
+        string RefreshToken,
+        DateTime RefreshTokenExpiresAt,
+        string Email,
+        string FullName,
+        IList<string> Roles);
 }

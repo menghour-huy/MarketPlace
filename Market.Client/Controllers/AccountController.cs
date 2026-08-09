@@ -38,16 +38,26 @@ namespace Market.Client.Controllers
             }
 
             HttpContext.Session.SetString("JwtToken", result.Token);
+            HttpContext.Session.SetString("AccessToken", result.Token);
+            HttpContext.Session.SetString("RefreshToken", result.RefreshToken);
 
             var claims = new List<Claim>
             {
                 new(ClaimTypes.Name, result.FullName),
-                new(ClaimTypes.Email, result.Email)
+                new(ClaimTypes.Email, result.Email),
+                new("access_token", result.Token)
             };
             claims.AddRange(result.Roles.Select(r => new Claim(ClaimTypes.Role, r)));
 
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
+            var principal = new ClaimsPrincipal(identity);
+            var authProperties = new AuthenticationProperties();
+            authProperties.StoreTokens(new[]
+            {
+                new AuthenticationToken { Name = "access_token", Value = result.Token }
+            });
+
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, authProperties);
 
             TempData["SuccessMessage"] = $"Welcome back, {result.FullName}!";
             return RedirectToAction("Index", "Home");

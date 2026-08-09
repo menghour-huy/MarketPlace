@@ -8,6 +8,7 @@ namespace Market.Client.API.Interface.Auth
     public interface IAuthApiClient
     {
         Task<(bool Succeeded, AuthResponse? Result, string? Error)> LoginAsync(LoginRequest request);
+        Task<(bool Succeeded, AuthResponse? Result, string? Error)> RefreshTokenAsync(RefreshTokenRequest request);
         Task<(bool Succeeded, Guid? UserId, string? Error)> RegisterAsync(RegisterRequest request);
     }
 }

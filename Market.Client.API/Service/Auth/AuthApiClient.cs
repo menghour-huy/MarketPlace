@@ -72,6 +72,61 @@ public class AuthApiClient : IAuthApiClient
         }
     }
 
+    public async Task<(bool, AuthResponse?, string?)> RefreshTokenAsync(RefreshTokenRequest request)
+    {
+        try
+        {
+            var response = await _http.PostAsJsonAsync("api/auth/refresh", request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                _logger.LogWarning("Refresh token failed. Status: {StatusCode}, Body: {Body}", response.StatusCode, body);
+                return (false, null, "Session expired. Please log in again.");
+            }
+
+            var payload = await response.Content.ReadFromJsonAsync<ApiResponse<AuthResponse>>();
+
+            if (payload is null)
+            {
+                _logger.LogWarning("Refresh token returned an empty response body.");
+                return (false, null, "Session expired. Please log in again.");
+            }
+
+            if (!payload.Success)
+            {
+                var error = payload.Errors.FirstOrDefault() ?? payload.Message;
+                _logger.LogWarning("Refresh token failed. Message: {Message}", error);
+                return (false, null, string.IsNullOrWhiteSpace(error) ? "Session expired. Please log in again." : error);
+            }
+
+            var result = payload.Data;
+            if (result is null || string.IsNullOrWhiteSpace(result.Token) || string.IsNullOrWhiteSpace(result.RefreshToken))
+            {
+                _logger.LogWarning("Refresh token returned invalid payload. Message: {Message}", payload.Message);
+                return (false, null, "Session expired. Please log in again.");
+            }
+
+            result = result with { Roles = result.Roles ?? [] };
+            return (true, result, null);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "Connection to Market.API failed during token refresh");
+            return (false, null, "Unable to reach the server. Please try again later.");
+        }
+        catch (TaskCanceledException ex)
+        {
+            _logger.LogError(ex, "Refresh token request to Market.API timed out");
+            return (false, null, "The server took too long to respond.");
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogError(ex, "Refresh token response from Market.API could not be parsed");
+            return (false, null, "Session expired. Please log in again.");
+        }
+    }
+
     public async Task<(bool, Guid?, string?)> RegisterAsync(RegisterRequest request)
     {
         try

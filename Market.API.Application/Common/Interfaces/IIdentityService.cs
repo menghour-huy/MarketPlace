@@ -12,6 +12,8 @@ namespace Market.API.Application.Common.Interfaces
 
         Task<(bool Succeeded, AuthResult? Result)> LoginAsync(string emailOrUsername, string password);
 
+        Task<(bool Succeeded, AuthResult? Result)> RefreshTokenAsync(string refreshToken);
+
         Task<(bool Succeeded, UserProfileResponse? Profile, string? Error)> GetUserProfileAsync(Guid userId);
 
         Task<(bool Succeeded, UserProfileResponse? Profile, string? Error)> UpdateUserProfileAsync(Guid userId, UpdateUserProfileRequest request);
@@ -20,6 +22,8 @@ namespace Market.API.Application.Common.Interfaces
     {
         public string Token { get; set; } = default!;
         public DateTime ExpiresAt { get; set; }
+        public string RefreshToken { get; set; } = default!;
+        public DateTime RefreshTokenExpiresAt { get; set; }
         public string Email { get; set; } = default!;
         public string FullName { get; set; } = default!;
         public IList<string> Roles { get; set; } = new List<string>();
