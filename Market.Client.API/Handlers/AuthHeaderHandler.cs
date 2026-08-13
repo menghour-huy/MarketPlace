@@ -11,10 +11,12 @@ namespace Market.Client.API.Handlers;
 public class AuthHeaderHandler : DelegatingHandler
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IHttpClientFactory _httpClientFactory;
 
-    public AuthHeaderHandler(IHttpContextAccessor httpContextAccessor)
+    public AuthHeaderHandler(IHttpContextAccessor httpContextAccessor, IHttpClientFactory httpClientFactory)
     {
         _httpContextAccessor = httpContextAccessor;
+        _httpClientFactory = httpClientFactory;
     }
 
     protected override async Task<HttpResponseMessage> SendAsync(
@@ -79,7 +81,8 @@ public class AuthHeaderHandler : DelegatingHandler
             return null;
         }
 
-        using var refreshClient = new HttpClient { BaseAddress = baseAddress };
+        using var refreshClient = _httpClientFactory.CreateClient("RefreshClient");
+        refreshClient.BaseAddress = baseAddress;
         var refreshResponse = await refreshClient.PostAsJsonAsync("api/auth/refresh", new RefreshTokenRequest(refreshToken), cancellationToken);
 
         if (!refreshResponse.IsSuccessStatusCode)
@@ -157,12 +160,24 @@ public class AuthHeaderHandler : DelegatingHandler
 
         if (request.Content is not null)
         {
+            // Read the body once and reconstruct it on both the clone and the original,
+            // because ReadAsByteArrayAsync exhausts the original content stream.
             var contentBytes = await request.Content.ReadAsByteArrayAsync(cancellationToken);
-            clone.Content = new ByteArrayContent(contentBytes);
+            var originalContentHeaders = request.Content.Headers
+                .Select(h => (h.Key, h.Value))
+                .ToList();
 
-            foreach (var header in request.Content.Headers)
+            var originalContent = new ByteArrayContent(contentBytes);
+            foreach (var (key, value) in originalContentHeaders)
             {
-                clone.Content.Headers.TryAddWithoutValidation(header.Key, header.Value);
+                originalContent.Headers.TryAddWithoutValidation(key, value);
+            }
+            request.Content = originalContent;
+
+            clone.Content = new ByteArrayContent(contentBytes);
+            foreach (var (key, value) in originalContentHeaders)
+            {
+                clone.Content.Headers.TryAddWithoutValidation(key, value);
             }
         }
 

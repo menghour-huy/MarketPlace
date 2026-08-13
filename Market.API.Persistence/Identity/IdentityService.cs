@@ -1,6 +1,7 @@
 ﻿using Market.API.Application.Common.Interfaces;
 using Market.Shared.Contracts.User;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
@@ -16,15 +17,18 @@ namespace Market.API.Persistence.Identity
     public class IdentityService : IIdentityService
     {
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly AppDbContext _db;
         private readonly IConfiguration _config;
         private readonly ILogger<IdentityService> _logger;
 
         public IdentityService(
             UserManager<ApplicationUser> userManager,
+            AppDbContext db,
             IConfiguration config,
             ILogger<IdentityService> logger)
         {
             _userManager = userManager;
+            _db = db;
             _config = config;
             _logger = logger;
         }
@@ -214,11 +218,38 @@ namespace Market.API.Persistence.Identity
 
         public async Task<(bool Succeeded, UserProfileResponse? Profile, string? Error)> GetUserProfileAsync(Guid userId)
         {
-            var user = await _userManager.FindByIdAsync(userId.ToString());
-            if (user is null)
+            var stopwatch = Stopwatch.StartNew();
+
+            // Project only the 7 columns needed — avoids SELECT * (PasswordHash,
+            // SecurityStamp, ConcurrencyStamp …) and lets EF use the covering index
+            // IX_tbl_Users_Id_Profile without touching the clustered-index pages.
+            var profile = await _db.Users
+                .Where(u => u.Id == userId)
+                .AsNoTracking()
+                .Select(u => new UserProfileResponse(
+                    u.Id,
+                    u.FullName,
+                    u.Email!,
+                    u.SecondaryEmail,
+                    u.ImageUrl,
+                    u.CreatedAt,
+                    u.UpdatedAt))
+                .FirstOrDefaultAsync();
+
+            stopwatch.Stop();
+
+            if (stopwatch.ElapsedMilliseconds > 500)
+            {
+                _logger.LogWarning(
+                    "Slow GetUserProfileAsync for userId {UserId}. Database lookup took {ElapsedMs}ms.",
+                    userId,
+                    stopwatch.ElapsedMilliseconds);
+            }
+
+            if (profile is null)
                 return (false, null, "User not found.");
 
-            return (true, MapToProfileResponse(user), null);
+            return (true, profile, null);
         }
 
         public async Task<(bool Succeeded, UserProfileResponse? Profile, string? Error)> UpdateUserProfileAsync(Guid userId, UpdateUserProfileRequest request)

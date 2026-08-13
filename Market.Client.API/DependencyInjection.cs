@@ -12,7 +12,9 @@ namespace Market.Client.API;
 
 public static class DependencyInjection
 {
-    private const int DefaultTimeoutSeconds = 30;
+    // Increased from 30 to 100 seconds to handle slow API responses and prevent premature timeouts
+    // Can be overridden via ApiSettings:TimeoutSeconds in appsettings.json
+    private const int DefaultTimeoutSeconds = 100;
 
     public static IServiceCollection AddMarketApiClient(this IServiceCollection services, IConfiguration config)
     {
@@ -30,6 +32,11 @@ public static class DependencyInjection
         }
 
         services.AddTransient<AuthHeaderHandler>();
+
+        // Bare client used exclusively for token refresh — no auth handler or Polly
+        // policies to avoid recursion and socket exhaustion from new HttpClient().
+        services.AddHttpClient("RefreshClient");
+
         services.AddHttpClient<IAuthApiClient, AuthApiClient>(c =>
         {
             c.BaseAddress = new Uri(baseUrl);

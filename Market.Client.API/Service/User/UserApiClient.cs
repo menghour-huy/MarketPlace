@@ -34,6 +34,21 @@ namespace Market.Client.API.Service.User
                 result = NormalizeImageUrl(result);
                 return (true, result, null);
             }
+            catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
+            {
+                _logger.LogError(ex, "Request timeout while retrieving user profile for userId: {UserId}", userId);
+                return (false, null, "The request timed out. Please try again or contact support if the issue persists.");
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogInformation(ex, "Request to retrieve user profile was canceled for userId: {UserId}", userId);
+                return (false, null, "The request was canceled.");
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "Network error retrieving user profile for userId: {UserId}", userId);
+                return (false, null, "Unable to connect to the server. Please check your connection and try again.");
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving user profile for userId: {UserId}", userId);
@@ -58,6 +73,21 @@ namespace Market.Client.API.Service.User
                 var result = await response.Content.ReadFromJsonAsync<UserProfileResponse>();
                 result = NormalizeImageUrl(result);
                 return (true, result, null);
+            }
+            catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
+            {
+                _logger.LogError(ex, "Request timeout while updating user profile for userId: {UserId}", userId);
+                return (false, null, "The request timed out. Please try again or contact support if the issue persists.");
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogInformation(ex, "Request to update user profile was canceled for userId: {UserId}", userId);
+                return (false, null, "The request was canceled.");
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "Network error updating user profile for userId: {UserId}", userId);
+                return (false, null, "Unable to connect to the server. Please check your connection and try again.");
             }
             catch (Exception ex)
             {
