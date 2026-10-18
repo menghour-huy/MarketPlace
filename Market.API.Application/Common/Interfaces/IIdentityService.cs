@@ -27,5 +27,7 @@ namespace Market.API.Application.Common.Interfaces
         public string Email { get; set; } = default!;
         public string FullName { get; set; } = default!;
         public IList<string> Roles { get; set; } = new List<string>();
+        public string? ImageUrl { get; set; }
+        public Guid UserId { get; set; }
     }
 }

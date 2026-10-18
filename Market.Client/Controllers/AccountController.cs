@@ -9,7 +9,7 @@ using System.Security.Claims;
 
 namespace Market.Client.Controllers
 {
-    public class AccountController : Controller
+    public class AccountController : BaseController
     {
         private readonly IAuthApiClient _authApiClient;
         private readonly ILogger<AccountController> _logger;
@@ -40,9 +40,17 @@ namespace Market.Client.Controllers
             HttpContext.Session.SetString("JwtToken", result.Token);
             HttpContext.Session.SetString("AccessToken", result.Token);
             HttpContext.Session.SetString("RefreshToken", result.RefreshToken);
+            HttpContext.Session.SetString("UserFullName", result.FullName);
+
+            // Store user profile image URL if available
+            if (!string.IsNullOrEmpty(result.ImageUrl))
+            {
+                HttpContext.Session.SetString("UserImageUrl", result.ImageUrl);
+            }
 
             var claims = new List<Claim>
             {
+                new(ClaimTypes.NameIdentifier, result.UserId.ToString()),
                 new(ClaimTypes.Name, result.FullName),
                 new(ClaimTypes.Email, result.Email),
                 new("access_token", result.Token)

@@ -11,5 +11,7 @@ namespace Market.Shared.Contracts.Auth
         DateTime RefreshTokenExpiresAt,
         string Email,
         string FullName,
-        IList<string> Roles);
+        IList<string> Roles,
+        string? ImageUrl = null,
+        Guid UserId = default);
 }

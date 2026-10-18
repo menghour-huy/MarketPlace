@@ -53,6 +53,7 @@ public class AuthApiClient : IAuthApiClient
             }
 
             result = result with { Roles = result.Roles ?? [] };
+            result = NormalizeImageUrl(result);
             return (true, result, null);
         }
         catch (HttpRequestException ex)
@@ -108,6 +109,7 @@ public class AuthApiClient : IAuthApiClient
             }
 
             result = result with { Roles = result.Roles ?? [] };
+            result = NormalizeImageUrl(result);
             return (true, result, null);
         }
         catch (HttpRequestException ex)
@@ -153,6 +155,29 @@ public class AuthApiClient : IAuthApiClient
             _logger.LogError(ex, "Register request to Market.API timed out for {Email}", request.Email);
             return (false, null, "The server took too long to respond.");
         }
+    }
+
+    private AuthResponse? NormalizeImageUrl(AuthResponse? result)
+    {
+        if (result is null || string.IsNullOrWhiteSpace(result.ImageUrl))
+        {
+            return result;
+        }
+
+        if (result.ImageUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            result.ImageUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+            result.ImageUrl.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+        {
+            return result;
+        }
+
+        if (_http.BaseAddress is null)
+        {
+            return result;
+        }
+
+        var absoluteUrl = new Uri(_http.BaseAddress, result.ImageUrl).ToString();
+        return result with { ImageUrl = absoluteUrl };
     }
 }
 

@@ -30,8 +30,8 @@ namespace Market.Client.API.Service.User
                     return (false, null, "Failed to retrieve user profile.");
                 }
 
-                var result = await response.Content.ReadFromJsonAsync<UserProfileResponse>();
-                result = NormalizeImageUrl(result);
+                var payload = await response.Content.ReadFromJsonAsync<ApiResponse<UserProfileResponse>>();
+                var result = NormalizeImageUrl(payload?.Data);
                 return (true, result, null);
             }
             catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
@@ -70,8 +70,8 @@ namespace Market.Client.API.Service.User
                     return (false, null, "Failed to update user profile.");
                 }
 
-                var result = await response.Content.ReadFromJsonAsync<UserProfileResponse>();
-                result = NormalizeImageUrl(result);
+                var payload = await response.Content.ReadFromJsonAsync<ApiResponse<UserProfileResponse>>();
+                var result = NormalizeImageUrl(payload?.Data);
                 return (true, result, null);
             }
             catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
@@ -118,5 +118,13 @@ namespace Market.Client.API.Service.User
             var absoluteUrl = new Uri(_http.BaseAddress, profile.ImageUrl).ToString();
             return profile with { ImageUrl = absoluteUrl };
         }
+    }
+
+    internal sealed class ApiResponse<T>
+    {
+        public bool Success { get; init; }
+        public string Message { get; init; } = string.Empty;
+        public T? Data { get; init; }
+        public IEnumerable<string> Errors { get; init; } = Array.Empty<string>();
     }
 }

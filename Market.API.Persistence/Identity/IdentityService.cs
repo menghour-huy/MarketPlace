@@ -385,7 +385,9 @@ namespace Market.API.Persistence.Identity
                 RefreshTokenExpiresAt = refreshToken.ExpiresAt,
                 Email = user.Email!,
                 FullName = user.FullName,
-                Roles = roles
+                Roles = roles,
+                ImageUrl = user.ImageUrl,
+                UserId = user.Id
             };
         }
 

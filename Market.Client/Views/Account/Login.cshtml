@@ -1,49 +1,283 @@
-﻿@model Market.Client.Models.Auth.LoginViewModel
+@model Market.Client.Models.Auth.LoginViewModel
 @{
     ViewData["Title"] = "Login";
-    Layout = "_Layout";
+    Layout = null;
 }
 
-<div class="d-flex justify-content-center align-items-center" style="min-height: 80vh;">
-    <div class="card shadow-sm" style="width: 400px;">
-        <div class="card-body p-4">
-            <h3 class="card-title text-center mb-4">Sign In</h3>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - MarketPlace</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/theme/dist/css/vendor.min.css" />
+    <link rel="stylesheet" href="~/lib/theme/dist/css/app.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
 
-            <div asp-validation-summary="ModelOnly" class="alert alert-danger d-none-empty"></div>
+<style>
+    .login-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        position: relative;
+        overflow: hidden;
+    }
 
-            <form id="frmLogin" asp-action="Login" asp-controller="Account" method="post">
-                <div class="mb-3">
-                    <label asp-for="EmailOrUsername" class="form-label"></label>
-                    <input asp-for="EmailOrUsername" class="form-control" placeholder="you@example.com or your username" />
-                    <span asp-validation-for="EmailOrUsername" class="text-danger small"></span>
-                </div>
+    .login-container::before {
+        content: '';
+        position: absolute;
+        width: 400px;
+        height: 400px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        top: -100px;
+        left: -100px;
+    }
 
-                <div class="mb-3">
-                    <label asp-for="Password" class="form-label"></label>
-                    <input asp-for="Password" class="form-control" placeholder="••••••••" />
-                    <span asp-validation-for="Password" class="text-danger small"></span>
-                </div>
+    .login-container::after {
+        content: '';
+        position: absolute;
+        width: 300px;
+        height: 300px;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 50%;
+        bottom: -50px;
+        right: -50px;
+    }
 
-                <button id="btnLogin" type="submit" class="btn btn-primary w-100">Sign In</button>
-            </form>
+    .login-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        width: 100%;
+        max-width: 420px;
+        padding: 48px;
+        position: relative;
+        z-index: 1;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
 
-            <p class="text-center mt-3 mb-0">
-                Don't have an account? <a asp-action="Register">Register</a>
+    .login-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .login-header h2 {
+        font-size: 32px;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 8px;
+    }
+
+    .login-header p {
+        color: #718096;
+        font-size: 14px;
+        margin: 0;
+    }
+
+    .form-group-modern {
+        margin-bottom: 24px;
+    }
+
+    .form-group-modern label {
+        display: block;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+
+    .form-control-modern {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 15px;
+        transition: all 0.3s ease;
+        background-color: #f7fafc;
+        font-family: inherit;
+    }
+
+    .form-control-modern:focus {
+        outline: none;
+        border-color: #667eea;
+        background-color: #fff;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-control-modern::placeholder {
+        color: #cbd5e0;
+    }
+
+    .btn-login {
+        width: 100%;
+        padding: 12px 24px;
+        font-size: 16px;
+        font-weight: 600;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 10px;
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-login:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    }
+
+    .btn-login:active {
+        transform: translateY(0);
+    }
+
+    .btn-login:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .error-alert {
+        background-color: #fed7d7;
+        border: 1px solid #fc8181;
+        color: #c53030;
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-size: 14px;
+        display: none;
+    }
+
+    .error-alert.show {
+        display: block;
+    }
+
+    .validation-error {
+        color: #e53e3e;
+        font-size: 13px;
+        margin-top: 6px;
+        display: block;
+    }
+
+    .login-footer {
+        text-align: center;
+        margin-top: 24px;
+        padding-top: 24px;
+        border-top: 1px solid #e2e8f0;
+    }
+
+    .login-footer p {
+        color: #4a5568;
+        font-size: 14px;
+        margin: 0;
+    }
+
+    .login-footer a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+        transition: color 0.3s ease;
+    }
+
+    .login-footer a:hover {
+        color: #764ba2;
+        text-decoration: underline;
+    }
+
+    .spinner-border-sm {
+        width: 16px;
+        height: 16px;
+        border-width: 2px;
+    }
+</style>
+
+<style media="screen and (max-width: 576px)">
+    .login-card {
+        padding: 32px 24px;
+        margin: 20px;
+    }
+
+    .login-header h2 {
+        font-size: 28px;
+    }
+
+    .login-container::before {
+        width: 300px;
+        height: 300px;
+    }
+
+    .login-container::after {
+        width: 200px;
+        height: 200px;
+    }
+</style>
+
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <h2>Welcome Back</h2>
+            <p>Sign in to your account to continue</p>
+        </div>
+
+        <div id="errorAlert" class="error-alert"></div>
+
+        <form id="frmLogin" asp-action="Login" asp-controller="Account" method="post">
+            <div class="form-group-modern">
+                <label asp-for="EmailOrUsername">Email or Username</label>
+                <input asp-for="EmailOrUsername" 
+                       class="form-control-modern" 
+                       placeholder="you@example.com or your username"
+                       autocomplete="username" />
+                <span asp-validation-for="EmailOrUsername" class="validation-error"></span>
+            </div>
+
+            <div class="form-group-modern">
+                <label asp-for="Password">Password</label>
+                <input asp-for="Password" 
+                       class="form-control-modern" 
+                       placeholder="Enter your password"
+                       autocomplete="current-password" />
+                <span asp-validation-for="Password" class="validation-error"></span>
+            </div>
+
+            <button id="btnLogin" type="submit" class="btn btn-login">
+                <span id="btnText">Sign In</span>
+            </button>
+        </form>
+
+        <div class="login-footer">
+            <p>
+                Don't have an account? 
+                <a asp-action="Register" asp-controller="Account">Create one now</a>
             </p>
         </div>
     </div>
 </div>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
+
     <script>
-        $('#frmLogin').on('submit', function () {
-            if (!$(this).valid()) return;
-            var $btn = $('#btnLogin');
-            $btn.prop('disabled', true)
-                .html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Signing in\u2026');
+        $(function() {
+            $('#frmLogin').on('submit', function () {
+                if (!$(this).valid()) return;
+                var $btn = $('#btnLogin');
+                $btn.prop('disabled', true)
+                    .html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Signing in…');
+            });
         });
     </script>
 }
+
+</body>
+</html>

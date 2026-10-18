@@ -11,7 +11,7 @@ namespace Market.Client.Controllers
 {
     [Authorize]
     [Route("user")]
-    public class UserController : Controller
+    public class UserController : BaseController
     {
         private readonly IUserApiClient _userApiClient;
         private readonly ILogger<UserController> _logger;
@@ -98,7 +98,18 @@ namespace Market.Client.Controllers
         {
             try
             {
-                var userId = GetCurrentUserId();
+                Guid userId;
+                try
+                {
+                    userId = GetCurrentUserId();
+                }
+                catch (UnauthorizedAccessException ex)
+                {
+                    _logger.LogError(ex, "Failed to get current user ID");
+                    TempData["ErrorMessage"] = "Authentication failed. Please log in again.";
+                    return RedirectToAction("Login", "Account");
+                }
+
                 var (succeeded, userProfile, error) = await _userApiClient.GetUserProfileAsync(userId);
 
                 if (!succeeded || userProfile == null)
@@ -122,7 +133,7 @@ namespace Market.Client.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading user settings");
-                TempData["ErrorMessage"] = "An error occurred while loading your settings.";
+                TempData["ErrorMessage"] = "An error occurred while loading your settings. Please try again.";
                 return View(new UserSettingsViewModel());
             }
         }
@@ -138,7 +149,18 @@ namespace Market.Client.Controllers
 
             try
             {
-                var userId = GetCurrentUserId();
+                Guid userId;
+                try
+                {
+                    userId = GetCurrentUserId();
+                }
+                catch (UnauthorizedAccessException ex)
+                {
+                    _logger.LogError(ex, "Failed to get current user ID");
+                    TempData["ErrorMessage"] = "Authentication failed. Please log in again.";
+                    return RedirectToAction("Login", "Account");
+                }
+
                 string? imageBase64 = model.ImageBase64;
 
                 // Convert uploaded image to base64 if provided
@@ -168,8 +190,16 @@ namespace Market.Client.Controllers
                     return View(model);
                 }
 
-                // Update session with new full name
-                HttpContext.Session.SetString("UserFullName", updatedProfile.FullName);
+                // Update session with new full name and image URL
+                if (!string.IsNullOrEmpty(updatedProfile.FullName))
+                {
+                    HttpContext.Session.SetString("UserFullName", updatedProfile.FullName);
+                }
+
+                if (!string.IsNullOrEmpty(updatedProfile.ImageUrl))
+                {
+                    HttpContext.Session.SetString("UserImageUrl", updatedProfile.ImageUrl);
+                }
 
                 TempData["SuccessMessage"] = "Your profile has been updated successfully.";
                 return RedirectToAction("Settings");
@@ -177,7 +207,7 @@ namespace Market.Client.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating user settings");
-                TempData["ErrorMessage"] = "An error occurred while updating your profile.";
+                TempData["ErrorMessage"] = "An error occurred while updating your profile. Please try again.";
                 return View(model);
             }
         }

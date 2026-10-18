@@ -5,57 +5,390 @@
     ViewData["Title"] = "User Settings";
 }
 
-<div class="container mt-5">
-    <div class="row">
-        <div class="col-lg-8 mx-auto">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0"><i class="fa fa-cog me-2"></i>Profile Settings</h4>
-                </div>
-                <div class="card-body">
-                    <form method="post" enctype="multipart/form-data" id="settingsForm">
-                        @if (ViewData.ModelState?.IsValid == false)
+<style>
+    .settings-container {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: 100vh;
+        padding: 40px 0;
+    }
+
+    .settings-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    .settings-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+    }
+
+    .settings-header h2 {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+    }
+
+    .settings-header i {
+        margin-right: 12px;
+        font-size: 32px;
+    }
+
+    .settings-body {
+        padding: 40px;
+    }
+
+    .form-section {
+        margin-bottom: 40px;
+    }
+
+    .form-section-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 24px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    .form-group-modern {
+        margin-bottom: 20px;
+    }
+
+    .form-group-modern label {
+        display: block;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+
+    .form-control-settings {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 15px;
+        transition: all 0.3s ease;
+        background-color: #f7fafc;
+        color: #2d3748;
+        font-family: inherit;
+    }
+
+    .form-control-settings:focus {
+        outline: none;
+        border-color: #667eea;
+        background-color: #fff;
+        color: #2d3748;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-control-settings:disabled {
+        background-color: #edf2f7;
+        color: #718096;
+        cursor: not-allowed;
+    }
+
+    .form-control-settings.is-invalid {
+        border-color: #e53e3e;
+        background-color: #fff5f5;
+    }
+
+    .form-control-settings.is-invalid:focus {
+        box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.1);
+    }
+
+    .form-control-settings::placeholder {
+        color: #a0aec0;
+    }
+
+    [data-bs-theme="dark"] .settings-container {
+        background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+    }
+
+    [data-bs-theme="dark"] .settings-card {
+        background: #1e293b;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    [data-bs-theme="dark"] .form-section-title {
+        color: #e2e8f0;
+        border-bottom-color: #4a5568;
+    }
+
+    [data-bs-theme="dark"] .form-group-modern label {
+        color: #e2e8f0;
+    }
+
+    [data-bs-theme="dark"] .form-control-settings {
+        background-color: #2d3748;
+        border-color: #4a5568;
+        color: #f7fafc;
+    }
+
+    [data-bs-theme="dark"] .form-control-settings:focus {
+        background-color: #374151;
+        border-color: #667eea;
+        color: #f7fafc;
+    }
+
+    [data-bs-theme="dark"] .form-control-settings:disabled {
+        background-color: #1a202c;
+        color: #a0aec0;
+    }
+
+    [data-bs-theme="dark"] .form-control-settings.is-invalid {
+        background-color: #3b1a1a;
+        border-color: #e53e3e;
+    }
+
+    [data-bs-theme="dark"] .form-control-settings::placeholder {
+        color: #718096;
+    }
+
+    .invalid-feedback {
+        color: #e53e3e;
+        font-size: 13px;
+        margin-top: 6px;
+        display: block;
+    }
+
+    .form-text {
+        color: #718096;
+        font-size: 13px;
+        display: block;
+        margin-top: 6px;
+    }
+
+    .profile-image-container {
+        position: relative;
+    }
+
+    .profile-image-container img {
+        max-width: 200px;
+        max-height: 200px;
+        border-radius: 12px;
+        object-fit: cover;
+        border: 3px solid #e2e8f0;
+    }
+
+    .profile-image-placeholder {
+        width: 200px;
+        height: 200px;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px dashed #cbd5e0;
+    }
+
+    .profile-image-placeholder i {
+        font-size: 48px;
+        color: #a0aec0;
+        margin-bottom: 12px;
+    }
+
+    .profile-image-placeholder p {
+        color: #718096;
+        margin: 0;
+        text-align: center;
+    }
+
+    .btn-modern {
+        padding: 10px 20px;
+        font-size: 14px;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-success-modern {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-success-modern:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    }
+
+    .btn-success-modern:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+
+    .btn-secondary-modern {
+        background: #e2e8f0;
+        color: #2d3748;
+    }
+
+    .btn-secondary-modern:hover {
+        background: #cbd5e0;
+    }
+
+    .btn-sm-modern {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+
+    .alert-modern {
+        padding: 16px;
+        border-radius: 8px;
+        margin-bottom: 24px;
+        display: none;
+        border: 1px solid;
+    }
+
+    .alert-success-modern {
+        background-color: #f0fff4;
+        border-color: #9ae6b4;
+        color: #22543d;
+        display: block;
+    }
+
+    .alert-danger-modern {
+        background-color: #fff5f5;
+        border-color: #fc8181;
+        color: #742a2a;
+        display: block;
+    }
+
+    .actions-row {
+        display: flex;
+        gap: 12px;
+        margin-top: 30px;
+        padding-top: 24px;
+        border-top: 2px solid #e2e8f0;
+    }
+
+    .account-info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        background: #f7fafc;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+
+    .account-info-item label {
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 6px;
+        display: block;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .account-info-item input {
+        font-family: inherit;
+    }
+
+    .spinner {
+        display: none;
+        width: 16px;
+        height: 16px;
+        margin-right: 8px;
+    }
+</style>
+
+<style media="screen and (max-width: 768px)">
+    .settings-body {
+        padding: 24px;
+    }
+
+    .form-section {
+        margin-bottom: 30px;
+    }
+
+    .account-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .actions-row {
+        flex-direction: column;
+    }
+
+    .actions-row button,
+    .actions-row a {
+        width: 100%;
+    }
+
+    .profile-image-container {
+        display: flex;
+        justify-content: center;
+    }
+</style>
+
+<div class="settings-container">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="settings-card">
+                    <div class="settings-header">
+                        <h2><i class="fa fa-cog"></i>Profile Settings</h2>
+                    </div>
+
+                    <div class="settings-body">
+                        @if (TempData["SuccessMessage"] != null)
                         {
-                            <script>$(function () { AppJs.toast.error('Please correct the errors below.'); });</script>
+                            <div class="alert alert-success-modern alert-modern">
+                                <i class="fa fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+                            </div>
                         }
-                        <!-- Profile Image Section -->
-                        <div class="row mb-4">
-                            <div class="col-md-12">
-                                <h5 class="mb-3">Profile Picture</h5>
+
+                        @if (TempData["ErrorMessage"] != null)
+                        {
+                            <div class="alert alert-danger-modern alert-modern">
+                                <i class="fa fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+                            </div>
+                        }
+
+                        <form method="post" enctype="multipart/form-data" id="settingsForm">
+                            @Html.AntiForgeryToken()
+
+                            <!-- Profile Image Section -->
+                            <div class="form-section">
+                                <h5 class="form-section-title"><i class="fa fa-image me-2"></i>Profile Picture</h5>
                                 <div class="row">
                                     <div class="col-md-4 text-center">
-                                        <div class="profile-image-container mb-3">
+                                        <div class="profile-image-container mb-4">
                                             @if (!string.IsNullOrEmpty(Model.ImageUrl))
                                             {
                                                 <img id="previewImage" 
                                                      src="@Model.ImageUrl" 
-                                                     alt="Profile" 
-                                                     class="img-fluid rounded"
-                                                     style="max-width: 200px; max-height: 200px; object-fit: cover;" />
+                                                     alt="Profile" />
                                             }
                                             else
                                             {
-                                                <div id="previewImagePlaceholder" 
-                                                     class="bg-light rounded d-flex align-items-center justify-content-center"
-                                                     style="width: 200px; height: 200px; margin: 0 auto;">
+                                                <div id="previewImagePlaceholder" class="profile-image-placeholder">
                                                     <div class="text-center">
-                                                        <i class="fa fa-camera fa-3x text-muted mb-2"></i>
-                                                        <p class="text-muted">No image selected</p>
+                                                        <i class="fa fa-camera"></i>
+                                                        <p>No image selected</p>
                                                     </div>
                                                 </div>
                                             }
                                         </div>
                                     </div>
                                     <div class="col-md-8">
-                                        <div class="mb-3">
-                                            <label for="ImageFile" class="form-label">Upload Image</label>
+                                        <div class="form-group-modern">
+                                            <label for="ImageFile">Upload Image</label>
                                             <input type="file" 
-                                                   class="form-control" 
+                                                   class="form-control-settings" 
                                                    id="ImageFile" 
                                                    name="ImageFile" 
                                                    accept="image/*"
                                                    onchange="previewImage(event)">
-                                            <small class="form-text text-muted">
+                                            <small class="form-text">
                                                 Supported formats: JPG, PNG, GIF, WebP. Max size: 5MB.
                                             </small>
                                             @if (ViewData.ModelState["ImageFile"]?.Errors.Any() ?? false)
@@ -65,109 +398,101 @@
                                                 </div>
                                             }
                                         </div>
-                                        <button type="button" class="btn btn-sm btn-secondary" onclick="clearImage()">
+                                        <button type="button" class="btn btn-modern btn-secondary-modern btn-sm-modern" onclick="clearImage()">
                                             <i class="fa fa-trash me-1"></i>Clear Image
                                         </button>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <hr />
+                            <!-- Personal Information Section -->
+                            <div class="form-section">
+                                <h5 class="form-section-title"><i class="fa fa-user me-2"></i>Personal Information</h5>
 
-                        <!-- Personal Information Section -->
-                        <div class="row mb-3">
-                            <div class="col-md-12">
-                                <h5 class="mb-3">Personal Information</h5>
+                                <!-- Full Name -->
+                                <div class="form-group-modern">
+                                    <label for="FullName">Full Name</label>
+                                    <input type="text" 
+                                           class="form-control-settings @(ViewData.ModelState["FullName"]?.Errors.Any() ?? false ? "is-invalid" : "")" 
+                                           id="FullName" 
+                                           name="FullName" 
+                                           value="@Model.FullName"
+                                           required>
+                                    @if (ViewData.ModelState["FullName"]?.Errors.Any() ?? false)
+                                    {
+                                        <div class="invalid-feedback d-block">
+                                            @(ViewData.ModelState["FullName"]?.Errors[0].ErrorMessage ?? "Invalid name")
+                                        </div>
+                                    }
+                                </div>
+
+                                <!-- Primary Email -->
+                                <div class="form-group-modern">
+                                    <label for="PrimaryEmail">Primary Email</label>
+                                    <input type="email" 
+                                           class="form-control-settings @(ViewData.ModelState["PrimaryEmail"]?.Errors.Any() ?? false ? "is-invalid" : "")" 
+                                           id="PrimaryEmail" 
+                                           name="PrimaryEmail" 
+                                           value="@Model.PrimaryEmail"
+                                           required>
+                                    @if (ViewData.ModelState["PrimaryEmail"]?.Errors.Any() ?? false)
+                                    {
+                                        <div class="invalid-feedback d-block">
+                                            @(ViewData.ModelState["PrimaryEmail"]?.Errors[0].ErrorMessage ?? "Invalid email")
+                                        </div>
+                                    }
+                                </div>
+
+                                <!-- Secondary Email -->
+                                <div class="form-group-modern">
+                                    <label for="SecondaryEmail">Secondary Email (Optional)</label>
+                                    <input type="email" 
+                                           class="form-control-settings @(ViewData.ModelState["SecondaryEmail"]?.Errors.Any() ?? false ? "is-invalid" : "")" 
+                                           id="SecondaryEmail" 
+                                           name="SecondaryEmail" 
+                                           value="@Model.SecondaryEmail">
+                                    @if (ViewData.ModelState["SecondaryEmail"]?.Errors.Any() ?? false)
+                                    {
+                                        <div class="invalid-feedback d-block">
+                                            @(ViewData.ModelState["SecondaryEmail"]?.Errors[0].ErrorMessage ?? "Invalid email")
+                                        </div>
+                                    }
+                                </div>
                             </div>
-                        </div>
 
-                        <!-- Full Name -->
-                        <div class="row mb-3">
-                            <div class="col-md-12">
-                                <label for="FullName" class="form-label">Full Name</label>
-                                <input type="text" 
-                                       class="form-control @(ViewData.ModelState["FullName"]?.Errors.Any() ?? false ? "is-invalid" : "")" 
-                                       id="FullName" 
-                                       name="FullName" 
-                                       value="@Model.FullName"
-                                       required>
-                                @if (ViewData.ModelState["FullName"]?.Errors.Any() ?? false)
-                                {
-                                    <div class="invalid-feedback d-block">
-                                        @(ViewData.ModelState["FullName"]?.Errors[0].ErrorMessage ?? "Invalid name")
+                            <!-- Account Information Section -->
+                            <div class="form-section">
+                                <h5 class="form-section-title"><i class="fa fa-info-circle me-2"></i>Account Information</h5>
+                                <div class="account-info-grid">
+                                    <div class="account-info-item">
+                                        <label>Account Created</label>
+                                        <input type="text" 
+                                               class="form-control-settings" 
+                                               value="@Model.CreatedAt.ToString("MMMM dd, yyyy hh:mm tt")"
+                                               disabled>
                                     </div>
-                                }
-                            </div>
-                        </div>
-
-                        <!-- Primary Email -->
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="PrimaryEmail" class="form-label">Primary Email</label>
-                                <input type="email" 
-                                       class="form-control @(ViewData.ModelState["PrimaryEmail"]?.Errors.Any() ?? false ? "is-invalid" : "")" 
-                                       id="PrimaryEmail" 
-                                       name="PrimaryEmail" 
-                                       value="@Model.PrimaryEmail"
-                                       required>
-                                @if (ViewData.ModelState["PrimaryEmail"]?.Errors.Any() ?? false)
-                                {
-                                    <div class="invalid-feedback d-block">
-                                        @(ViewData.ModelState["PrimaryEmail"]?.Errors[0].ErrorMessage ?? "Invalid email")
+                                    <div class="account-info-item">
+                                        <label>Last Updated</label>
+                                        <input type="text" 
+                                               class="form-control-settings" 
+                                               value="@(Model.UpdatedAt?.ToString("MMMM dd, yyyy hh:mm tt") ?? "Never")"
+                                               disabled>
                                     </div>
-                                }
+                                </div>
                             </div>
 
-                            <!-- Secondary Email -->
-                            <div class="col-md-6">
-                                <label for="SecondaryEmail" class="form-label">Secondary Email (Optional)</label>
-                                <input type="email" 
-                                       class="form-control @(ViewData.ModelState["SecondaryEmail"]?.Errors.Any() ?? false ? "is-invalid" : "")" 
-                                       id="SecondaryEmail" 
-                                       name="SecondaryEmail" 
-                                       value="@Model.SecondaryEmail">
-                                @if (ViewData.ModelState["SecondaryEmail"]?.Errors.Any() ?? false)
-                                {
-                                    <div class="invalid-feedback d-block">
-                                        @(ViewData.ModelState["SecondaryEmail"]?.Errors[0].ErrorMessage ?? "Invalid email")
-                                    </div>
-                                }
-                            </div>
-                        </div>
-
-                        <!-- Account Information -->
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Account Created</label>
-                                <input type="text" 
-                                       class="form-control" 
-                                       value="@Model.CreatedAt.ToString("MMMM dd, yyyy")"
-                                       disabled>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Last Updated</label>
-                                <input type="text" 
-                                       class="form-control" 
-                                       value="@(Model.UpdatedAt?.ToString("MMMM dd, yyyy") ?? "Never")"
-                                       disabled>
-                            </div>
-                        </div>
-
-                        <hr />
-
-                        <!-- Action Buttons -->
-                        <div class="row">
-                            <div class="col-md-12">
-                                <button type="submit" class="btn btn-primary me-2">
-                                    <i class="fa fa-save me-1"></i>Save Changes
+                            <!-- Action Buttons -->
+                            <div class="actions-row">
+                                <button type="submit" class="btn btn-modern btn-success-modern" id="btnSave">
+                                    <span class="spinner" id="spinner"></span>
+                                    <span id="btnText">Save Changes</span>
                                 </button>
-                                <a href="@Url.Action("Index", "Home")" class="btn btn-secondary">
+                                <a href="@Url.Action("Index", "Home")" class="btn btn-modern btn-secondary-modern" style="text-decoration: none; display: inline-block;">
                                     <i class="fa fa-times me-1"></i>Cancel
                                 </a>
                             </div>
-                        </div>
-                    </form>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -183,15 +508,15 @@
 
             // Validate file size (5MB)
             if (file.size > 5 * 1024 * 1024) {
-                AppJs.toast.error('File size must be less than 5MB.');
+                showError('File size must be less than 5MB.');
                 event.target.value = '';
                 return;
             }
 
-            // Validate file type 
+            // Validate file type
             const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
             if (!validTypes.includes(file.type)) {
-                AppJs.toast.error('Please upload a valid image file (JPG, PNG, GIF, WebP).');
+                showError('Please upload a valid image file (JPG, PNG, GIF, WebP).');
                 event.target.value = '';
                 return;
             }
@@ -204,23 +529,18 @@
                 if (previewId && e.target) {
                     previewId.src = e.target.result;
                     previewId.style.display = 'block';
+                    if (placeholderId) placeholderId.style.display = 'none';
                 } else if (e.target) {
                     // Create img element if it doesn't exist
                     const img = document.createElement('img');
                     img.id = 'previewImage';
                     img.src = e.target.result;
-                    img.className = 'img-fluid rounded';
-                    img.style.cssText = 'max-width: 200px; max-height: 200px; object-fit: cover;';
 
                     const container = document.querySelector('.profile-image-container');
                     if (container) {
                         container.innerHTML = '';
                         container.appendChild(img);
                     }
-                }
-
-                if (placeholderId) {
-                    placeholderId.style.display = 'none';
                 }
             };
             reader.readAsDataURL(file);
@@ -238,5 +558,37 @@
                 placeholderId.style.display = 'flex';
             }
         }
+
+        function showError(message) {
+            // Create a simple toast-like notification
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-danger-modern alert-modern';
+            alertDiv.style.display = 'block';
+            alertDiv.style.marginBottom = '20px';
+            alertDiv.innerHTML = '<i class="fa fa-exclamation-circle me-2"></i>' + message;
+
+            const settingsBody = document.querySelector('.settings-body');
+            if (settingsBody) {
+                settingsBody.insertBefore(alertDiv, settingsBody.firstChild);
+
+                // Auto remove after 5 seconds
+                setTimeout(() => {
+                    alertDiv.remove();
+                }, 5000);
+            }
+        }
+
+        // Form submission handler
+        document.getElementById('settingsForm').addEventListener('submit', function(e) {
+            const btnSave = document.getElementById('btnSave');
+            const btnText = document.getElementById('btnText');
+            const spinner = document.getElementById('spinner');
+
+            if (btnSave && btnText && spinner) {
+                btnSave.disabled = true;
+                spinner.style.display = 'inline-block';
+                btnText.textContent = 'Saving...';
+            }
+        });
     </script>
 }

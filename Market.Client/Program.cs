@@ -1,5 +1,6 @@
 using Market.Client.API;
 using Market.Client.Filters;
+using Market.Client.Middleware;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Serilog;
 
@@ -40,6 +41,7 @@ app.UseHttpsRedirection();
 app.UseRouting();
 app.UseSession();
 app.UseAuthentication();
+app.UseUserSession();
 app.UseAuthorization();
 
 app.MapStaticAssets();

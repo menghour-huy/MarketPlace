@@ -213,3 +213,77 @@ html {
     opacity: 0;
   }
 }
+
+/* ============================================================
+   Modern UI Enhancements
+   ============================================================ */
+
+/* Global improvements for modern look */
+.form-control:focus,
+.form-select:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+/* Button hover effects */
+.btn {
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+/* Card styling improvements */
+.card {
+  border-radius: 12px;
+  border-color: #e2e8f0;
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Alert improvements */
+.alert {
+  border-radius: 8px;
+  border: 1px solid;
+}
+
+.alert-success {
+  background-color: #f0fff4;
+  border-color: #9ae6b4;
+  color: #22543d;
+}
+
+.alert-danger {
+  background-color: #fff5f5;
+  border-color: #fc8181;
+  color: #742a2a;
+}
+
+.alert-info {
+  background-color: #ebf8ff;
+  border-color: #90cdf4;
+  color: #2c5282;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .container-fluid padding {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .card {
+    margin: 0 12px;
+  }
+}
+
