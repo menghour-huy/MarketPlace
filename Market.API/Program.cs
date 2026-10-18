@@ -56,6 +56,22 @@ builder.Services
 
 builder.Services.AddAuthorization();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+var allowedCorsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("ClientOrigins", policy =>
+    {
+        if (allowedCorsOrigins is { Length: > 0 })
+        {
+            policy.WithOrigins(allowedCorsOrigins)
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        }
+    });
+});
 
 var app = builder.Build();
 
@@ -75,6 +91,8 @@ using (var scope = app.Services.CreateScope())
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseMiddleware<GlobalExceptionMiddleware>();
@@ -82,6 +100,7 @@ app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
+app.UseCors("ClientOrigins");
 app.UseAuthentication();
 app.UseAuthorization();
 
